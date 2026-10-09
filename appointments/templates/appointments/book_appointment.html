@@ -1,0 +1,254 @@
+{% extends 'appointments/base.html' %}
+{% load static %}
+
+{% block title %}Book Doctor Appointment | CarePlus Hospital{% endblock %}
+
+{% block content %}
+<section class="py-5 bg-light border-bottom">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold text-uppercase mb-2">Online Outpatient Booking</span>
+                <h1 class="display-5 fw-bold mb-2">Schedule Your Medical Consultation</h1>
+                <p class="text-muted mb-0 lead">
+                    Fast, secure, and duplicate-checked appointment reservation with top medical specialists.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-care">
+                    <i class="bi bi-clock-history me-1"></i> Check Existing Booking
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row g-5">
+            <!-- Booking Form -->
+            <div class="col-lg-8">
+                <div class="booking-card">
+                    <form method="POST" id="appointmentBookingForm" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Non-field error alert (e.g. duplicate slot conflict) -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger shadow-sm border-0 d-flex align-items-center mb-4" role="alert">
+                            <i class="bi bi-exclamation-octagon-fill fs-3 me-3 text-danger"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Booking Conflict Detected</h6>
+                                {% for error in form.non_field_errors %}
+                                    <div class="small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Section 1: Patient Information -->
+                        <div class="mb-5">
+                            <div class="form-section-title">
+                                <span class="badge bg-primary rounded-circle" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">1</span>
+                                <span>Patient Personal Information</span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="id_first_name" class="form-label fw-bold small text-secondary">First Name <span class="text-danger">*</span></label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_last_name" class="form-label fw-bold small text-secondary">Last Name <span class="text-danger">*</span></label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="id_phone" class="form-label fw-bold small text-secondary">Contact Phone Number <span class="text-danger">*</span></label>
+                                    {{ form.phone }}
+                                    <div class="form-text small">Used to look up your dashboard and past reports.</div>
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="id_email" class="form-label fw-bold small text-secondary">Email Address <span class="text-danger">*</span></label>
+                                    {{ form.email }}
+                                    <div class="form-text small">Confirmation details will be sent here.</div>
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="id_age" class="form-label fw-bold small text-secondary">Age</label>
+                                    {{ form.age }}
+                                    {% if form.age.errors %}
+                                        <div class="text-danger small mt-1">{{ form.age.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="id_gender" class="form-label fw-bold small text-secondary">Gender <span class="text-danger">*</span></label>
+                                    {{ form.gender }}
+                                    {% if form.gender.errors %}
+                                        <div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="id_blood_group" class="form-label fw-bold small text-secondary">Blood Group</label>
+                                    {{ form.blood_group }}
+                                    {% if form.blood_group.errors %}
+                                        <div class="text-danger small mt-1">{{ form.blood_group.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Choose Doctor & Department -->
+                        <div class="mb-5">
+                            <div class="form-section-title">
+                                <span class="badge bg-primary rounded-circle" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">2</span>
+                                <span>Choose Specialist Doctor</span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label for="id_doctor" class="form-label fw-bold small text-secondary">Attending Physician <span class="text-danger">*</span></label>
+                                    {{ form.doctor }}
+                                    {% if form.doctor.errors %}
+                                        <div class="text-danger small mt-1">{{ form.doctor.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Date & Slot Selection -->
+                        <div class="mb-5">
+                            <div class="form-section-title">
+                                <span class="badge bg-primary rounded-circle" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">3</span>
+                                <span>Select Date & Preferred Time Slot</span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="id_appointment_date" class="form-label fw-bold small text-secondary">Appointment Date <span class="text-danger">*</span></label>
+                                    {{ form.appointment_date }}
+                                    <div class="form-text small">Please choose today or an upcoming clinic date.</div>
+                                    {% if form.appointment_date.errors %}
+                                        <div class="text-danger small mt-1">{{ form.appointment_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="id_time_slot" class="form-label fw-bold small text-secondary">
+                                        Time Slot <span class="text-danger">*</span>
+                                        <span id="slotLoadingIndicator" class="spinner-border spinner-border-sm text-primary ms-2" style="display: none;" role="status"></span>
+                                    </label>
+                                    {{ form.time_slot }}
+                                    {% if form.time_slot.errors %}
+                                        <div class="text-danger small mt-1">{{ form.time_slot.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Interactive slot picker grid -->
+                                <div class="col-12 mt-3">
+                                    <label class="form-label fw-bold small text-secondary d-flex justify-content-between align-items-center">
+                                        <span>Quick Slot Selector:</span>
+                                        <small class="text-muted fw-normal"><i class="bi bi-info-circle me-1"></i> Grayed slots with line are already booked</small>
+                                    </label>
+                                    <div class="slot-selection-grid" id="slotGridContainer">
+                                        <button type="button" class="slot-btn" data-slot="09:00 AM" onclick="selectTimeSlot('09:00 AM', this)"><i class="bi bi-clock"></i> 09:00 AM</button>
+                                        <button type="button" class="slot-btn" data-slot="09:30 AM" onclick="selectTimeSlot('09:30 AM', this)"><i class="bi bi-clock"></i> 09:30 AM</button>
+                                        <button type="button" class="slot-btn" data-slot="10:00 AM" onclick="selectTimeSlot('10:00 AM', this)"><i class="bi bi-clock"></i> 10:00 AM</button>
+                                        <button type="button" class="slot-btn" data-slot="10:30 AM" onclick="selectTimeSlot('10:30 AM', this)"><i class="bi bi-clock"></i> 10:30 AM</button>
+                                        <button type="button" class="slot-btn" data-slot="11:00 AM" onclick="selectTimeSlot('11:00 AM', this)"><i class="bi bi-clock"></i> 11:00 AM</button>
+                                        <button type="button" class="slot-btn" data-slot="11:30 AM" onclick="selectTimeSlot('11:30 AM', this)"><i class="bi bi-clock"></i> 11:30 AM</button>
+                                        <button type="button" class="slot-btn" data-slot="02:00 PM" onclick="selectTimeSlot('02:00 PM', this)"><i class="bi bi-clock"></i> 02:00 PM</button>
+                                        <button type="button" class="slot-btn" data-slot="02:30 PM" onclick="selectTimeSlot('02:30 PM', this)"><i class="bi bi-clock"></i> 02:30 PM</button>
+                                        <button type="button" class="slot-btn" data-slot="03:00 PM" onclick="selectTimeSlot('03:00 PM', this)"><i class="bi bi-clock"></i> 03:00 PM</button>
+                                        <button type="button" class="slot-btn" data-slot="03:30 PM" onclick="selectTimeSlot('03:30 PM', this)"><i class="bi bi-clock"></i> 03:30 PM</button>
+                                        <button type="button" class="slot-btn" data-slot="04:00 PM" onclick="selectTimeSlot('04:00 PM', this)"><i class="bi bi-clock"></i> 04:00 PM</button>
+                                        <button type="button" class="slot-btn" data-slot="04:30 PM" onclick="selectTimeSlot('04:30 PM', this)"><i class="bi bi-clock"></i> 04:30 PM</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Symptoms & Medical Reason -->
+                        <div class="mb-5">
+                            <div class="form-section-title">
+                                <span class="badge bg-primary rounded-circle" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">4</span>
+                                <span>Reason for Visit & Symptoms</span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="id_reason" class="form-label fw-bold small text-secondary">Chief Health Complaints / Symptoms <span class="text-danger">*</span></label>
+                                    {{ form.reason_for_visit }}
+                                    <div class="form-text small">e.g., Chest discomfort, persistent knee pain, pediatric immunization, recurrent migraine.</div>
+                                    {% if form.reason_for_visit.errors %}
+                                        <div class="text-danger small mt-1">{{ form.reason_for_visit.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-3">
+                            <div class="small text-muted">
+                                <i class="bi bi-shield-lock-fill text-success me-1"></i> Data protected by hospital patient privacy terms.
+                            </div>
+                            <button type="submit" class="btn btn-primary-care btn-lg px-5">
+                                <i class="bi bi-check2-circle fs-5"></i> Confirm & Book Appointment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Booking Sidebar / Help Card -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm p-4 rounded-4 bg-white mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-info-circle-fill text-primary me-2"></i> OPD Clinic Guidelines</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-3 small text-muted mb-0">
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-clock text-primary mt-1"></i>
+                            <div><strong>Arrival Time:</strong> Please arrive 15 minutes before your allotted time slot for vital check-ins.</div>
+                        </li>
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-file-earmark-medical text-primary mt-1"></i>
+                            <div><strong>Documents:</strong> Bring previous medical reports, prescriptions, or insurance cards if applicable.</div>
+                        </li>
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-arrow-repeat text-primary mt-1"></i>
+                            <div><strong>Cancellation:</strong> You can cancel or reschedule anytime prior to consultation via our Patient Portal.</div>
+                        </li>
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-cash-coin text-primary mt-1"></i>
+                            <div><strong>Payment:</strong> Consultation fee is payable at the OPD counter upon check-in.</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="p-4 rounded-4 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                    <h5 class="fw-bold mb-2"><i class="bi bi-headset text-info me-2"></i> Need Help with Booking?</h5>
+                    <p class="small text-secondary mb-3">
+                        Our hospital front desk team is ready to assist you in selecting the right doctor or scheduling emergency visits.
+                    </p>
+                    <div class="d-flex align-items-center gap-2 text-info fw-bold fs-5 mb-1">
+                        <i class="bi bi-telephone-fill"></i> +1 (800) 432-CARE
+                    </div>
+                    <div class="small text-white-50">Extension 101 for OPD Helpdesk</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
