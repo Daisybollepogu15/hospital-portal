@@ -1,1 +1,0 @@
-# appointments.management.commands package
