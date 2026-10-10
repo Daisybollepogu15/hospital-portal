@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: careplus-hospital-portal
+    runtime: python
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate && python manage.py seed_hospital_data && python manage.py collectstatic --no-input"
+    startCommand: "gunicorn hospital_config.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.4
+      - key: DEBUG
+        value: "True"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "*"

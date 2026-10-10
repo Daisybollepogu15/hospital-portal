@@ -1,0 +1,140 @@
+{% extends 'appointments/base.html' %}
+{% load static %}
+
+{% block title %}Medical Report #{{ report.id }} | CarePlus Hospital{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <!-- Top action buttons -->
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print max-w-900 mx-auto" style="max-width: 900px;">
+            <a href="{% url 'patient_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <button type="button" class="btn btn-primary-care" onclick="window.print()">
+                <i class="bi bi-printer-fill me-1"></i> Print / Save Report (PDF)
+            </button>
+        </div>
+
+        <!-- Printable Medical Report Sheet -->
+        <div class="medical-report-sheet">
+            <!-- Header -->
+            <div class="report-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="brand-icon" style="width: 50px; height: 50px; font-size: 1.6rem;">
+                        <i class="bi bi-hospital"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0">CarePlus Multispecialty Hospital</h3>
+                        <div class="small text-muted">742 Healthway Boulevard &bull; Department of {{ doctor.department }}</div>
+                        <div class="small text-muted">Ph: +1 (800) 432-CARE &bull; OPD Clinic Record</div>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <div class="badge bg-primary fs-6 mb-1">CLINICAL SUMMARY</div>
+                    <div class="small text-muted">Report ID: <strong>CR-{{ report.id|stringformat:"05d" }}</strong></div>
+                    <div class="small text-muted">Date: <strong>{{ report.report_date|date:"F d, Y" }}</strong></div>
+                </div>
+            </div>
+
+            <!-- Patient & Doctor Metadata -->
+            <div class="row g-4 mb-4 pb-3 border-bottom">
+                <div class="col-6">
+                    <h6 class="text-uppercase text-primary fw-bold small mb-2"><i class="bi bi-person-fill"></i> Patient Details</h6>
+                    <div class="fw-bold fs-6">{{ patient.full_name }}</div>
+                    <div class="small text-muted">Age / Gender: {{ patient.age|default:"--" }} yrs / {{ patient.gender }}</div>
+                    <div class="small text-muted">Phone: {{ patient.phone }}</div>
+                    <div class="small text-muted">Blood Group: {{ patient.blood_group|default:"Not recorded" }}</div>
+                </div>
+                <div class="col-6 text-end">
+                    <h6 class="text-uppercase text-primary fw-bold small mb-2"><i class="bi bi-person-badge-fill"></i> Attending Doctor</h6>
+                    <div class="fw-bold fs-6">{{ doctor.name }}</div>
+                    <div class="small text-muted">{{ doctor.qualification }}</div>
+                    <div class="small text-muted">{{ doctor.department }} &bull; {{ doctor.specialization }}</div>
+                    <div class="small text-muted">Room: {{ doctor.room_number }}</div>
+                </div>
+            </div>
+
+            <!-- Vitals Grid -->
+            <div class="mb-4">
+                <h6 class="text-uppercase text-secondary fw-bold small mb-3"><i class="bi bi-activity"></i> Vital Signs at Examination</h6>
+                <div class="row g-3">
+                    <div class="col-3">
+                        <div class="vital-box">
+                            <div class="vital-label">Blood Pressure</div>
+                            <div class="vital-value text-primary">{{ report.blood_pressure|default:"120/80" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="vital-box">
+                            <div class="vital-label">Heart Rate</div>
+                            <div class="vital-value text-danger">{{ report.heart_rate|default:"72 bpm" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="vital-box">
+                            <div class="vital-label">Temperature</div>
+                            <div class="vital-value text-warning">{{ report.temperature|default:"98.6 °F" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="vital-box">
+                            <div class="vital-label">Respiratory Rate</div>
+                            <div class="vital-value text-success">{{ report.respiratory_rate|default:"16/min" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clinical Diagnosis -->
+            <div class="mb-4">
+                <h6 class="text-uppercase text-secondary fw-bold small mb-2"><i class="bi bi-clipboard2-pulse"></i> Clinical Diagnosis & Evaluation</h6>
+                <div class="p-3 rounded-3 bg-light border text-dark" style="line-height: 1.7;">
+                    {{ report.diagnosis }}
+                </div>
+            </div>
+
+            <!-- Prescription (Rx) -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="rx-symbol">&#8478;</span>
+                    <h6 class="text-uppercase text-secondary fw-bold small mb-0">Prescribed Medications & Dosage</h6>
+                </div>
+                <div class="p-3 rounded-3 bg-light border text-dark" style="line-height: 1.8; white-space: pre-line;">
+                    {{ report.prescription }}
+                </div>
+            </div>
+
+            <!-- Doctor Notes & Instructions -->
+            {% if report.doctor_notes %}
+            <div class="mb-4">
+                <h6 class="text-uppercase text-secondary fw-bold small mb-2"><i class="bi bi-lightbulb"></i> Clinical Advice & Lifestyle Guidelines</h6>
+                <div class="p-3 rounded-3 bg-light border text-muted small" style="line-height: 1.7;">
+                    {{ report.doctor_notes }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Follow-up & Signoff -->
+            <div class="row align-items-end pt-4 border-top mt-5">
+                <div class="col-6">
+                    {% if report.follow_up_date %}
+                    <div class="p-2 px-3 rounded-3 bg-info-subtle text-info-emphasis d-inline-block small fw-bold">
+                        <i class="bi bi-calendar-check me-1"></i> Recommended Next Review: {{ report.follow_up_date|date:"F d, Y" }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-6 text-end">
+                    <div class="d-inline-block text-center">
+                        <div class="fw-bold font-monospace text-primary mb-1" style="font-size: 1.1rem; border-bottom: 1px solid #94a3b8; padding-bottom: 4px;">
+                            {{ doctor.name }}
+                        </div>
+                        <div class="small text-muted">Authorized Medical Practitioner</div>
+                        <div class="small text-muted font-monospace" style="font-size: 0.75rem;">Reg. No: MED-{{ doctor.id }}0924</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

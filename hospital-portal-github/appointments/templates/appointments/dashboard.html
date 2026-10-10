@@ -1,0 +1,253 @@
+{% extends 'appointments/base.html' %}
+{% load static %}
+
+{% block title %}Patient Portal & Appointments Dashboard | CarePlus Hospital{% endblock %}
+
+{% block content %}
+<section class="py-5 bg-light border-bottom">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold text-uppercase mb-2">Patient Services</span>
+                <h1 class="display-5 fw-bold mb-2">Patient Care Portal</h1>
+                <p class="text-muted mb-0 lead">
+                    Track your upcoming visits, manage pending appointments, and review past medical records.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a href="{% url 'book_appointment' %}" class="btn btn-primary-care btn-lg">
+                    <i class="bi bi-calendar-plus-fill"></i> New Appointment
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <!-- Patient Lookup Bar -->
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
+            <h5 class="fw-bold mb-3"><i class="bi bi-search text-primary me-2"></i> Find Your Health Records</h5>
+            <form method="GET" action="{% url 'patient_dashboard' %}">
+                <div class="row g-2">
+                    <div class="col-md-9">
+                        {{ search_form.query }}
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary-care w-100 justify-content-center h-100">
+                            <i class="bi bi-search"></i> Access Records
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <div class="small text-muted mt-2">
+                <i class="bi bi-info-circle me-1"></i> Tip: Enter your registered contact phone number or your appointment ID (e.g., <code>CP-2026-XXXX</code>).
+            </div>
+        </div>
+
+        {% if patient %}
+            <!-- Patient Profile Banner -->
+            <div class="patient-info-banner">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fs-2 fw-bold" style="width: 65px; height: 65px;">
+                        {{ patient.first_name|first }}{{ patient.last_name|first }}
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-1 text-white">{{ patient.full_name }}</h3>
+                        <div class="small text-white-50 d-flex flex-wrap gap-3">
+                            <span><i class="bi bi-telephone-fill me-1"></i> {{ patient.phone }}</span>
+                            <span><i class="bi bi-envelope-fill me-1"></i> {{ patient.email }}</span>
+                            {% if patient.blood_group %}
+                                <span><i class="bi bi-droplet-fill text-danger me-1"></i> Blood: {{ patient.blood_group }}</span>
+                            {% endif %}
+                            <span><i class="bi bi-person me-1"></i> {{ patient.gender }}, {{ patient.age|default:"N/A" }} yrs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <a href="{% url 'book_appointment' %}" class="btn btn-outline-light rounded-pill px-4">
+                        <i class="bi bi-calendar2-plus me-1"></i> Schedule Another Visit
+                    </a>
+                </div>
+            </div>
+
+            <!-- Appointments Dashboard Tabs -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-5">
+                <div class="card-header bg-white border-bottom p-3">
+                    <ul class="nav nav-pills gap-2" id="dashboardTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active rounded-pill px-4 fw-bold" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab">
+                                <i class="bi bi-calendar-event me-1"></i> Upcoming Appointments
+                                <span class="badge bg-primary ms-1">{{ upcoming_appointments|length }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-pill px-4 fw-bold" id="previous-tab" data-bs-toggle="tab" data-bs-target="#previous" type="button" role="tab">
+                                <i class="bi bi-journal-medical me-1"></i> Previous & Past Records
+                                <span class="badge bg-secondary ms-1">{{ previous_appointments|length }}</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="tab-content" id="dashboardTabContent">
+                        <!-- Upcoming Appointments Tab -->
+                        <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+                            {% if upcoming_appointments %}
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ref. ID</th>
+                                            <th>Doctor & Specialty</th>
+                                            <th>Date & Time</th>
+                                            <th>Room</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for appt in upcoming_appointments %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'appointment_confirmation' appt.appointment_id %}" class="fw-bold text-primary font-monospace">
+                                                    {{ appt.appointment_id }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ appt.doctor.name }}</div>
+                                                <small class="text-muted">{{ appt.doctor.department }} &bull; {{ appt.doctor.specialization }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ appt.appointment_date|date:"M d, Y" }}</div>
+                                                <small class="text-muted"><i class="bi bi-clock me-1"></i> {{ appt.time_slot }}</small>
+                                            </td>
+                                            <td>{{ appt.doctor.room_number }}</td>
+                                            <td>
+                                                <span class="badge badge-status-{{ appt.status|lower }}">
+                                                    {{ appt.status }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="d-inline-flex gap-2">
+                                                    <a href="{% url 'appointment_confirmation' appt.appointment_id %}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                                        <i class="bi bi-ticket-detailed me-1"></i> View Slip
+                                                    </a>
+                                                    {% if appt.status == 'Pending' %}
+                                                    <a href="{% url 'cancel_appointment' appt.appointment_id %}" class="btn btn-sm btn-outline-danger rounded-pill">
+                                                        <i class="bi bi-x-circle me-1"></i> Cancel
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-calendar2-check text-muted fs-1 mb-2 d-block"></i>
+                                <h5 class="fw-bold">No Upcoming Appointments</h5>
+                                <p class="text-muted small">You currently have no scheduled visits awaiting consultation.</p>
+                                <a href="{% url 'book_appointment' %}" class="btn btn-primary-care">Book an Appointment</a>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Previous Records Tab -->
+                        <div class="tab-pane fade" id="previous" role="tabpanel">
+                            {% if previous_appointments %}
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ref. ID</th>
+                                            <th>Doctor & Department</th>
+                                            <th>Visit Date</th>
+                                            <th>Status</th>
+                                            <th>Medical Report</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for appt in previous_appointments %}
+                                        <tr>
+                                            <td>
+                                                <span class="fw-bold text-secondary font-monospace">{{ appt.appointment_id }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ appt.doctor.name }}</div>
+                                                <small class="text-muted">{{ appt.doctor.department }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ appt.appointment_date|date:"M d, Y" }}</div>
+                                                <small class="text-muted">{{ appt.time_slot }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-status-{{ appt.status|lower }}">
+                                                    {{ appt.status }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if appt.medical_report %}
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle p-2">
+                                                        <i class="bi bi-file-earmark-check-fill me-1"></i> Report Ready
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted small">No report filed</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="d-inline-flex gap-2">
+                                                    {% if appt.medical_report %}
+                                                    <a href="{% url 'medical_report_detail' appt.medical_report.id %}" class="btn btn-sm btn-success rounded-pill">
+                                                        <i class="bi bi-file-earmark-medical me-1"></i> View Report
+                                                    </a>
+                                                    {% endif %}
+                                                    <a href="{% url 'appointment_confirmation' appt.appointment_id %}" class="btn btn-sm btn-outline-secondary rounded-pill">
+                                                        Slip
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-folder-x text-muted fs-1 mb-2 d-block"></i>
+                                <h5 class="fw-bold">No Past Medical Records Found</h5>
+                                <p class="text-muted small">Past consultations and completed records will be archived here.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Initial prompt state when no query is searched yet -->
+            <div class="text-center py-5 bg-white rounded-4 border shadow-sm p-4">
+                <div class="brand-icon mx-auto mb-3" style="width: 70px; height: 70px; font-size: 2.2rem;">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+                <h3 class="fw-bold mb-2">Welcome to Your Personal Patient Portal</h3>
+                <p class="text-muted max-w-600 mx-auto mb-4">
+                    Please enter the phone number you used during your appointment booking above to pull up all your scheduled visits, consultation slips, and diagnostic medical reports.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'book_appointment' %}" class="btn btn-primary-care">
+                        <i class="bi bi-calendar-plus-fill me-1"></i> Book First Appointment
+                    </a>
+                    <a href="{% url 'doctors_list' %}" class="btn btn-outline-care">
+                        <i class="bi bi-people me-1"></i> View Our Doctors
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
